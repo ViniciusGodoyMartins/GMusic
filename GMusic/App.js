@@ -44,7 +44,6 @@ export default function App() {
     await sound.setIsLoopingAsync(isLooping);
     setSongStatus(status);
     setIsPlaying(false);
-    console.log('carregado: ', songs[songIndex].url);
   };
 
   useEffect(() => {
@@ -82,26 +81,45 @@ export default function App() {
   }
 
   const skipToNext = () => {
-
+    songSlider.current.scrollToOffset({
+      offset: (songIndex + 1) * width
+    })
   }
 
   const skipToPrevious = () => {
-
+    songSlider.current.scrollToOffset({
+      offset: (songIndex - 1) * width
+    })
   }
 
   const stop = async () => {
-
+    if (sound) {
+      await sound.stopAsync();
+      sound.unloadAsync();
+      await loadSound();
+    }
   }
 
   const repeat = async (value) => {
-
+    setIsLooping(value);
+    await sound.setIsLoopingAsync(value);
   }
+
+  const updatePosition = async () => {
+    
+  }
+
+  useEffect(() => {
+    const intervalId = setInterval(updatePosition, 500);
+    return () => clearInterval(intervalId);
+  }, [sound, isPlaying]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.main}>
 
         <Animated.FlatList
+          ref={songSlider}
           data={songs}
           keyExtractor={item => item.id}
           renderItem={renderSongs}
@@ -133,9 +151,9 @@ export default function App() {
         <View>
           <Slider
             style={styles.progressBar}
-            value={10}
+            value={songStatus ? songStatus.positionMillis : 0}
             minimumValue={0}
-            maximumValue={100}
+            maximumValue={songStatus ? songStatus.durationMillis : 0}
             thumbTintColor='#FFD369'
             minimumTrackTintColor='#FFD369'
             maximumTrackTintColor='#fff'
